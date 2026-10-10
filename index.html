@@ -7,6 +7,39 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<!-- Splash DevSereno com carregador -->
+<div id="splash" style="
+  position:fixed; inset:0; background:#0b1020; color:#e0e7ff;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  z-index:99999; font-family:system-ui,sans-serif; transition:opacity .4s;
+">
+  <div style="font-size:30px; font-weight:800; margin-bottom:6px;">DevSereno</div>
+  <div style="font-size:13px; opacity:.7; letter-spacing:2px; margin-bottom:28px;">DESENVOLVEDOR</div>
+
+  <!-- Barra de carregamento -->
+  <div style="width:180px; height:4px; background:#1e293b; border-radius:4px; overflow:hidden;">
+    <div id="bar" style="width:0%; height:100%; background:#818cf8; border-radius:4px; transition:width 1.4s ease-out;"></div>
+  </div>
+  <div style="margin-top:10px; font-size:12px; opacity:.6;">Carregando...</div>
+</div>
+
+<script>
+  // Inicia a barra
+  setTimeout(() => {
+    const bar = document.getElementById('bar');
+    if (bar) bar.style.width = '100%';
+  }, 50);
+
+  // Remove o splash após 1.5s
+  setTimeout(() => {
+    const s = document.getElementById('splash');
+    if (s) {
+      s.style.opacity = '0';
+      setTimeout(() => s.remove(), 400);
+    }
+  }, 1500);
+</script>
+  
   <div class="container">
     <h1>🔍 Encontre as páginas</h1>
     <input type="text" id="busca" class="search-box" placeholder="Buscar por título, descrição ou tags...">
