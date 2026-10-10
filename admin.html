@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Área Administrativa</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <div id="login-area">
+      <h1>🔐 Área Administrativa</h1>
+      <div class="alert">
+        <strong>Atenção:</strong> Esta proteção é apenas no navegador (client-side). 
+        Qualquer pessoa que baixar o código pode ver o hash e burlar. 
+        Use apenas como trava simples, não para dados sensíveis.
+      </div>
+      <div class="form-group">
+        <label>Senha:</label>
+        <input type="password" id="senha" placeholder="Digite a senha">
+      </div>
+      <button onclick="verificarSenha()">Entrar</button>
+      <p style="margin-top:15px;"><a href="index.html">← Voltar ao menu</a></p>
+    </div>
+
+    <div id="admin-area" class="hidden">
+      <h1>Gerenciar Páginas / Projetos</h1>
+      <p style="margin-bottom:20px; color:#666;">
+        Adicione novas páginas. Depois baixe o novo banco e substitua o arquivo <code>menu.db</code> no repositório do GitHub e faça o push.
+      </p>
+
+      <h2>Adicionar nova página</h2>
+      <div class="form-group">
+        <label>Título</label>
+        <input type="text" id="titulo" required>
+      </div>
+      <div class="form-group">
+        <label>Descrição</label>
+        <textarea id="descricao" rows="2"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Categoria</label>
+        <input type="text" id="categoria" placeholder="Ex: Projetos, Blog, Geral">
+      </div>
+      <div class="form-group">
+        <label>URL</label>
+        <input type="text" id="url" placeholder="/minha-pagina.html ou https://...">
+      </div>
+      <div class="form-group">
+        <label>Tags (separadas por vírgula)</label>
+        <input type="text" id="tags" placeholder="projeto, tutorial, ferramenta">
+      </div>
+      <button onclick="adicionarPagina()">Adicionar</button>
+
+      <h2 style="margin-top:40px;">Páginas existentes</h2>
+      <div id="lista-admin"></div>
+
+      <div style="margin-top:30px;">
+        <button onclick="baixarBanco()">⬇️ Baixar menu.db atualizado</button>
+        <button class="danger" onclick="sair()">Sair</button>
+      </div>
+      <p style="margin-top:20px;"><a href="index.html">← Voltar ao menu público</a></p>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
+  <script>
+    // ========== CONFIGURAÇÃO DE SENHA ==========
+    // Hash SHA-256 da senha. Padrão: "admin123"
+    // Para mudar: abra o console do navegador e rode:
+    // await crypto.subtle.digest('SHA-256', new TextEncoder().encode('SUA_NOVA_SENHA')).then(b => console.log(Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')))
+    const SENHA_HASH = "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9"; // admin123
+    // ===========================================
+
+    let db;
+    let SQL;
+
+    async function hashSenha(senha) {
+      const msgBuffer = new TextEncoder().encode(senha);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    async function verificarSenha() {
+      const senha = document.getElementById('senha').value;
+      const hash = await hashSenha(senha);
+      if (hash === SENHA_HASH) {
+        document.getElementById('login-area').classList.add('hidden');
+        document.getElementById('admin-area').classList.remove('hidden');
+        await carregarBanco();
+      } else {
+        alert('Senha incorreta!');
+      }
+    }
+
+    async function carregarBanco() {
+      SQL = await initSqlJs({
+        locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${file}`
+      });
+      const response = await fetch('menu.db');
+      const buf = await response.arrayBuffer();
+      db = new SQL.Database(new Uint8Array(buf));
+      listarPaginas();
+    }
+
+    function listarPaginas() {
+      const lista = document.getElementById('lista-admin');
+      const stmt = db.prepare("SELECT id, titulo, categoria, url FROM paginas ORDER BY id DESC");
+      let html = '';
+      while (stmt.step()) {
+        const row = stmt.getAsObject();
+        html += `
+          <div class="pagina">
+            <div>
+              <strong>${row.titulo}</strong> 
+              <span class="categoria">${row.categoria || ''}</span>
+              <small>${row.url}</small>
+            </div>
+            <div class="actions">
+              <button class="danger" onclick="excluirPagina(${row.id})">Excluir</button>
+            </div>
+          </div>
+        `;
+      }
+      stmt.free();
+      lista.innerHTML = html || '<p>Nenhuma página cadastrada.</p>';
+    }
+
+    function adicionarPagina() {
+      const titulo = document.getElementById('titulo').value.trim();
+      const descricao = document.getElementById('descricao').value.trim();
+      const categoria = document.getElementById('categoria').value.trim();
+      const url = document.getElementById('url').value.trim();
+      const tags = document.getElementById('tags').value.trim();
+
+      if (!titulo || !url) {
+        alert('Título e URL são obrigatórios!');
+        return;
+      }
+
+      db.run("INSERT INTO paginas (titulo, descricao, categoria, url, tags) VALUES (?, ?, ?, ?, ?)",
+        [titulo, descricao, categoria, url, tags]);
+
+      // Limpar form
+      document.getElementById('titulo').value = '';
+      document.getElementById('descricao').value = '';
+      document.getElementById('categoria').value = '';
+      document.getElementById('url').value = '';
+      document.getElementById('tags').value = '';
+
+      listarPaginas();
+      alert('Página adicionada! Lembre-se de baixar o banco atualizado e substituir no GitHub.');
+    }
+
+    function excluirPagina(id) {
+      if (confirm('Tem certeza que deseja excluir?')) {
+        db.run("DELETE FROM paginas WHERE id = ?", [id]);
+        listarPaginas();
+      }
+    }
+
+    function baixarBanco() {
+      const data = db.export();
+      const blob = new Blob([data], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'menu.db';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function sair() {
+      location.reload();
+    }
+
+    // Permitir Enter no campo senha
+    document.getElementById('senha').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') verificarSenha();
+    });
+  </script>
+</body>
+</html>

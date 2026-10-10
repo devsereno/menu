@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menu do Site - GitHub Pages</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Encontre as páginas</h1>
+    <input type="text" id="busca" class="search-box" placeholder="Buscar por título, descrição ou tags...">
+    <div id="resultados">Carregando menu...</div>
+    <a href="admin.html" class="admin-link">Área administrativa (restrita)</a>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
+  <script>
+    let db;
+
+    async function init() {
+      const SQL = await initSqlJs({
+        locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${file}`
+      });
+      const response = await fetch('menu.db');
+      const buf = await response.arrayBuffer();
+      db = new SQL.Database(new Uint8Array(buf));
+      render();
+    }
+
+    function render(filtro = '') {
+      const resultados = document.getElementById('resultados');
+      let query = "SELECT titulo, descricao, categoria, url, tags FROM paginas";
+      let params = [];
+
+      if (filtro) {
+        query += " WHERE titulo LIKE ? OR descricao LIKE ? OR tags LIKE ? OR categoria LIKE ?";
+        const like = `%${filtro}%`;
+        params = [like, like, like, like];
+      }
+      query += " ORDER BY titulo";
+
+      const stmt = db.prepare(query);
+      stmt.bind(params);
+      let html = '';
+      while (stmt.step()) {
+        const row = stmt.getAsObject();
+        html += `
+          <div class="pagina">
+            <h3><a href="${row.url}">${row.titulo}</a></h3>
+            <div class="meta">
+              <span class="categoria">${row.categoria || 'Sem categoria'}</span>
+              ${row.descricao || ''}
+            </div>
+            <div class="tags">${row.tags ? 'Tags: ' + row.tags : ''}</div>
+          </div>
+        `;
+      }
+      stmt.free();
+      resultados.innerHTML = html || '<p>Nenhuma página encontrada.</p>';
+    }
+
+    document.getElementById('busca').addEventListener('input', (e) => {
+      render(e.target.value);
+    });
+
+    init().catch(err => {
+      document.getElementById('resultados').innerHTML = '<p>Erro ao carregar o banco de dados. Verifique se o arquivo menu.db está na mesma pasta.</p>';
+      console.error(err);
+    });
+  </script>
+</body>
+</html>
