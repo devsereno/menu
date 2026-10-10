@@ -1,0 +1,12 @@
+[credential "https://github.com"]
+	helper = 
+	helper = !/data/data/com.termux/files/usr/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/data/data/com.termux/files/usr/bin/gh auth git-credential
+[user]
+	email = devsereno@users.noreply.github.com
+	name = devsereno
+[safe]
+	directory = /storage/emulated/0/Documents/casameio
+	directory = /storage/emulated/0/Download
