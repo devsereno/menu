@@ -56,13 +56,14 @@
     let carouselInterval;
 
     // Mapeamento de screenshots (você pode adicionar mais depois)
-    const screenshots = {
-      'etiquetas': ['screenshots/etiquetas1.jpg', 'screenshots/etiquetas2.jpg'],
-      'credenciais': ['screenshots/credenciais1.jpg', 'screenshots/credenciais2.jpg'],
-      'apura': ['screenshots/apura1.jpg', 'screenshots/apura2.jpg', 'screenshots/apura3.jpg', 'screenshots/apura4.jpg'],
-      'canvaword': ['screenshots/canvaword1.jpg', 'screenshots/canvaword2.jpg'],
-      'editor': ['screenshots/canvaword1.jpg', 'screenshots/canvaword2.jpg']
-    };
+    function getScreenshots(titulo) {
+      const t = titulo.toLowerCase();
+      if (t.includes('etiqueta')) return ['screenshots/etiquetas1.jpg', 'screenshots/etiquetas2.jpg'];
+      if (t.includes('credencial')) return ['screenshots/credenciais1.jpg', 'screenshots/credenciais2.jpg'];
+      if (t.includes('apura') || t.includes('eleição') || t.includes('eleicao')) return ['screenshots/apura1.jpg', 'screenshots/apura2.jpg', 'screenshots/apura3.jpg', 'screenshots/apura4.jpg'];
+      if (t.includes('canva') || t.includes('editor')) return ['screenshots/canvaword1.jpg', 'screenshots/canvaword2.jpg'];
+      return [];
+    }
 
     const icones = {
       etiquetas: 'fas fa-tags',
