@@ -206,18 +206,16 @@
       const carousel = document.getElementById('carousel');
       const dots = document.getElementById('dots');
 
-      if (imgs.length > 0) {
-        carousel.innerHTML = imgs.map(src => `<img src="${src}" alt="" onerror="this.style.display='none'">`).join('');
-        dots.innerHTML = imgs.map((_, i) => `<span class="dot ${i===0?'active':''}"></span>`).join('');
-      } else {
-        carousel.innerHTML = `
-          <div class="placeholder">
-            <div class="ph-logo">DevSereno</div>
-            <div class="ph-text">Carregando...</div>
-            <div class="ph-spinner"></div>
-          </div>`;
-        dots.innerHTML = '';
-      }
+      // Mostra o pré-load primeiro
+      carousel.innerHTML = `
+        <div class="placeholder">
+          <div class="ph-logo">DevSereno</div>
+          <div class="ph-text">Carregando...</div>
+          <div class="ph-spinner"></div>
+        </div>`;
+      dots.innerHTML = '';
+
+      document.getElementById('modal').style.display = 'flex';
 
       document.getElementById('modal-info').innerHTML = `
         <h2>${p.titulo}</h2>
@@ -226,8 +224,14 @@
         <a href="${p.url}" target="_blank" class="btn-abrir">Abrir app <i class="fas fa-external-link-alt"></i></a>
       `;
 
-      document.getElementById('modal').style.display = 'flex';
-      startCarousel(imgs.length);
+      // Depois de 1.2s carrega as fotos (se existirem)
+      setTimeout(() => {
+        if (imgs.length > 0) {
+          carousel.innerHTML = imgs.map(src => `<img src="${src}" alt="">`).join('');
+          dots.innerHTML = imgs.map((_, i) => `<span class="dot ${i===0?'active':''}"></span>`).join('');
+          startCarousel(imgs.length);
+        }
+      }, 1200);
     }
 
     function startCarousel(count) {
