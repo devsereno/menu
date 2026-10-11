@@ -59,9 +59,9 @@
     const screenshots = {
       'etiquetas': ['screenshots/etiquetas1.jpg', 'screenshots/etiquetas2.jpg'],
       'credenciais': ['screenshots/credenciais1.jpg', 'screenshots/credenciais2.jpg'],
-      'apura': ['screenshots/apura1.jpg', 'screenshots/apura2.jpg', 'screenshots/apura3.jpg'],
-      'canvaword': ['screenshots/canva1.jpg', 'screenshots/canva2.jpg'],
-      'editor': ['screenshots/canva1.jpg', 'screenshots/canva2.jpg']
+      'apura': ['screenshots/apura1.jpg', 'screenshots/apura2.jpg', 'screenshots/apura3.jpg', 'screenshots/apura4.jpg'],
+      'canvaword': ['screenshots/canvaword1.jpg', 'screenshots/canvaword2.jpg'],
+      'editor': ['screenshots/canvaword1.jpg', 'screenshots/canvaword2.jpg']
     };
 
     const icones = {
@@ -205,8 +205,19 @@
 
       const carousel = document.getElementById('carousel');
       const dots = document.getElementById('dots');
-      carousel.innerHTML = imgs.map(src => `<img src="${src}" alt="">`).join('') || '<div class="no-img">Sem screenshots</div>';
-      dots.innerHTML = imgs.map((_, i) => `<span class="dot ${i===0?'active':''}"></span>`).join('');
+
+      if (imgs.length > 0) {
+        carousel.innerHTML = imgs.map(src => `<img src="${src}" alt="" onerror="this.style.display='none'">`).join('');
+        dots.innerHTML = imgs.map((_, i) => `<span class="dot ${i===0?'active':''}"></span>`).join('');
+      } else {
+        carousel.innerHTML = `
+          <div class="placeholder">
+            <div class="ph-logo">DevSereno</div>
+            <div class="ph-text">Carregando...</div>
+            <div class="ph-spinner"></div>
+          </div>`;
+        dots.innerHTML = '';
+      }
 
       document.getElementById('modal-info').innerHTML = `
         <h2>${p.titulo}</h2>

@@ -76,4 +76,15 @@ h1 { font-size: 28px; font-weight: 700; background: linear-gradient(90deg, #a5b4
   display: inline-block; margin-top: 16px; background: #6366f1; color: white; padding: 12px 24px;
   border-radius: 10px; text-decoration: none; font-weight: 600;
 }
+.placeholder {
+  height: 280px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #0f172a, #1e293b); color: #a5b4fc;
+}
+.ph-logo { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; }
+.ph-text { font-size: 14px; opacity: 0.7; margin-bottom: 16px; }
+.ph-spinner {
+  width: 32px; height: 32px; border: 3px solid #334155; border-top-color: #818cf8;
+  border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 .no-img { height: 200px; display: flex; align-items: center; justify-content: center; color: #64748b; }
