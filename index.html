@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevSereno - Menu</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">DEVSERENO</div>
+      <h1>Encontre as páginas</h1>
+    </div>
+
+    <div class="search-wrapper">
+      <i class="fas fa-search"></i>
+      <input type="text" id="busca" class="search-box" placeholder="Buscar por título, descrição ou tags...">
+    </div>
+
+    <div class="main-layout">
+      <div id="resultados" class="cards-grid"></div>
+      
+      <!-- Barra de letras com zoom -->
+      <div id="letter-bar" class="letter-bar">
+        <div id="zoom-letter" class="zoom-letter">A</div>
+      </div>
+    </div>
+
+    <div id="load-more-wrap" style="text-align:center; margin-top:24px; display:none;">
+      <button id="load-more" class="btn-load">Carregar mais</button>
+    </div>
+
+    <a href="admin.html" class="admin-link"><i class="fas fa-lock"></i> Área administrativa</a>
+  </div>
+
+  <!-- Modal com carrossel -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <div class="carousel-container">
+        <div class="carousel" id="carousel"></div>
+        <div class="carousel-dots" id="dots"></div>
+      </div>
+      <div id="modal-info"></div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
+  <script>
+    let db, allPages = [], filtered = [], page = 0;
+    const PER_PAGE = 8;
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+    let currentLetter = null;
+    let carouselInterval;
+
+    // Mapeamento de screenshots (você pode adicionar mais depois)
+    const screenshots = {
+      'etiquetas': ['screenshots/etiquetas1.jpg', 'screenshots/etiquetas2.jpg'],
+      'credenciais': ['screenshots/credenciais1.jpg', 'screenshots/credenciais2.jpg'],
+      'apura': ['screenshots/apura1.jpg', 'screenshots/apura2.jpg', 'screenshots/apura3.jpg'],
+      'canvaword': ['screenshots/canva1.jpg', 'screenshots/canva2.jpg'],
+      'editor': ['screenshots/canva1.jpg', 'screenshots/canva2.jpg']
+    };
+
+    const icones = {
+      etiquetas: 'fas fa-tags',
+      apura: 'fas fa-chart-bar',
+      credenciais: 'fas fa-id-card',
+      canvaword: 'fas fa-edit',
+      editor: 'fas fa-edit',
+      blog: 'fas fa-newspaper',
+      contato: 'fas fa-envelope',
+      default: 'fas fa-link'
+    };
+
+    async function init() {
+      const SQL = await initSqlJs({ locateFile: f => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${f}` });
+      const buf = await (await fetch('menu.db')).arrayBuffer();
+      db = new SQL.Database(new Uint8Array(buf));
+      loadAll();
+      setupLetterBar();
+    }
+
+    function loadAll() {
+      const stmt = db.prepare("SELECT * FROM paginas ORDER BY titulo");
+      allPages = [];
+      while (stmt.step()) allPages.push(stmt.getAsObject());
+      stmt.free();
+      applyFilter();
+    }
+
+    function getIcon(titulo) {
+      const t = titulo.toLowerCase();
+      for (const k in icones) if (t.includes(k)) return icones[k];
+      return icones.default;
+    }
+
+    function applyFilter(search = '') {
+      filtered = allPages.filter(p => {
+        const matchSearch = !search || 
+          p.titulo.toLowerCase().includes(search.toLowerCase()) ||
+          (p.descricao||'').toLowerCase().includes(search.toLowerCase()) ||
+          (p.tags||'').toLowerCase().includes(search.toLowerCase());
+        const matchLetter = !currentLetter || p.titulo.toUpperCase().startsWith(currentLetter);
+        return matchSearch && matchLetter;
+      });
+      page = 0;
+      render();
+    }
+
+    function render() {
+      const start = page * PER_PAGE;
+      const slice = filtered.slice(start, start + PER_PAGE);
+      const html = slice.map(p => `
+        <div class="card" onclick="openModal(${p.id})">
+          <div class="card-icon"><i class="${getIcon(p.titulo)}"></i></div>
+          <div class="card-content">
+            <h3>${p.titulo}</h3>
+            <span class="categoria">${p.categoria || 'Geral'}</span>
+            <p>${p.descricao || ''}</p>
+          </div>
+        </div>
+      `).join('');
+      document.getElementById('resultados').innerHTML = html || '<p class="empty">Nenhum app encontrado</p>';
+      document.getElementById('load-more-wrap').style.display = (start + PER_PAGE < filtered.length) ? 'block' : 'none';
+    }
+
+    document.getElementById('load-more').onclick = () => { page++; render(); };
+
+    document.getElementById('busca').oninput = e => applyFilter(e.target.value);
+
+    // ========== BARRA DE LETRAS COM ZOOM ==========
+    function setupLetterBar() {
+      const bar = document.getElementById('letter-bar');
+      letters.forEach(l => {
+        const el = document.createElement('div');
+        el.className = 'letter';
+        el.textContent = l;
+        el.dataset.letter = l;
+        bar.appendChild(el);
+      });
+
+      const zoom = document.getElementById('zoom-letter');
+      let touching = false;
+
+      function setLetter(letter) {
+        currentLetter = letter;
+        zoom.textContent = letter;
+        zoom.style.opacity = '1';
+        applyFilter(document.getElementById('busca').value);
+      }
+
+      function getLetterFromY(y) {
+        const rect = bar.getBoundingClientRect();
+        const rel = Math.max(0, Math.min(1, (y - rect.top) / rect.height));
+        const idx = Math.floor(rel * letters.length);
+        return letters[Math.min(idx, letters.length - 1)];
+      }
+
+      bar.addEventListener('touchstart', e => {
+        touching = true;
+        const l = getLetterFromY(e.touches[0].clientY);
+        setLetter(l);
+        e.preventDefault();
+      }, { passive: false });
+
+      bar.addEventListener('touchmove', e => {
+        if (!touching) return;
+        const l = getLetterFromY(e.touches[0].clientY);
+        setLetter(l);
+        e.preventDefault();
+      }, { passive: false });
+
+      bar.addEventListener('touchend', () => {
+        touching = false;
+        setTimeout(() => zoom.style.opacity = '0', 300);
+      });
+
+      // Mouse support
+      bar.addEventListener('mousedown', e => {
+        touching = true;
+        setLetter(getLetterFromY(e.clientY));
+      });
+      document.addEventListener('mousemove', e => {
+        if (!touching) return;
+        setLetter(getLetterFromY(e.clientY));
+      });
+      document.addEventListener('mouseup', () => {
+        if (touching) {
+          touching = false;
+          setTimeout(() => zoom.style.opacity = '0', 300);
+        }
+      });
+    }
+
+    // ========== MODAL + CARROSSEL ==========
+    function openModal(id) {
+      const p = allPages.find(x => x.id === id);
+      if (!p) return;
+
+      const key = Object.keys(screenshots).find(k => p.titulo.toLowerCase().includes(k)) || '';
+      const imgs = screenshots[key] || [];
+
+      const carousel = document.getElementById('carousel');
+      const dots = document.getElementById('dots');
+      carousel.innerHTML = imgs.map(src => `<img src="${src}" alt="">`).join('') || '<div class="no-img">Sem screenshots</div>';
+      dots.innerHTML = imgs.map((_, i) => `<span class="dot ${i===0?'active':''}"></span>`).join('');
+
+      document.getElementById('modal-info').innerHTML = `
+        <h2>${p.titulo}</h2>
+        <span class="categoria">${p.categoria || 'Geral'}</span>
+        <p>${p.descricao || ''}</p>
+        <a href="${p.url}" target="_blank" class="btn-abrir">Abrir app <i class="fas fa-external-link-alt"></i></a>
+      `;
+
+      document.getElementById('modal').style.display = 'flex';
+      startCarousel(imgs.length);
+    }
+
+    function startCarousel(count) {
+      clearInterval(carouselInterval);
+      if (count < 2) return;
+      let idx = 0;
+      carouselInterval = setInterval(() => {
+        idx = (idx + 1) % count;
+        document.getElementById('carousel').style.transform = `translateX(-${idx * 100}%)`;
+        document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+      }, 2200);
+    }
+
+    document.querySelector('.close').onclick = () => {
+      document.getElementById('modal').style.display = 'none';
+      clearInterval(carouselInterval);
+    };
+    window.onclick = e => {
+      if (e.target.id === 'modal') {
+        document.getElementById('modal').style.display = 'none';
+        clearInterval(carouselInterval);
+      }
+    };
+
+    init();
+  </script>
+</body>
+</html>
