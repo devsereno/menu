@@ -63,3 +63,4 @@ A proteção da área administrativa é **apenas no lado do cliente**.
 - HTML + CSS + JavaScript puro
 - [sql.js](https://github.com/sql-js/sql.js) (SQLite no navegador via WebAssembly)
 - GitHub Pages (hospedagem estática gratuita)
+ 
