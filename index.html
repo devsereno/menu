@@ -58,11 +58,11 @@
     // Mapeamento de screenshots (você pode adicionar mais depois)
     function getScreenshots(titulo) {
       const base = 'screenshots/';
-      const t = (titulo || '').toLowerCase();
+      const t = (titulo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
       if (t.includes('etiqueta')) return [base + 'etiquetas1.jpg', base + 'etiquetas2.jpg'];
-      if (t.includes('credencial')) return [base + 'credenciais1.jpg', base + 'credenciais2.jpg'];
+      if (t.includes('credencial') || t.includes('credenciais')) return [base + 'credenciais1.jpg', base + 'credenciais2.jpg'];
       if (t.includes('apura') || t.includes('elei')) return [base + 'apura1.jpg', base + 'apura2.jpg', base + 'apura3.jpg', base + 'apura4.jpg'];
-      if (t.includes('canva') || t.includes('editor')) return [base + 'canvaword1.jpg', base + 'canvaword2.jpg'];
+      if (t.includes('canva') || t.includes('editor') || t.includes('word')) return [base + 'canvaword1.jpg', base + 'canvaword2.jpg'];
       return [];
     }
 
