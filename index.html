@@ -202,8 +202,6 @@
       const p = allPages.find(x => x.id === id);
       if (!p) return;
 
-      const imgs = getScreenshots(p.titulo);
-
       const carousel = document.getElementById('carousel');
       const dots = document.getElementById('dots');
 
@@ -227,14 +225,21 @@
 
       // Depois de 1.2s carrega as fotos (se existirem)
       setTimeout(() => {
+        const imgs = getScreenshots(p.titulo);
+        console.log('Imagens para', p.titulo, imgs); // para debug
         if (imgs.length > 0) {
           carousel.innerHTML = imgs.map(src => `
             <div class="slide">
-              <img src="${src}" alt="" onerror="this.parentElement.innerHTML='<div class=\\'placeholder\\'><div class=\\'ph-text\\'>Imagem não disponível</div></div>'">
+              <img src="${src}" alt="${p.titulo}" onerror="this.parentElement.innerHTML='<div class=\\'placeholder\\'><div class=\\'ph-text\\'>Imagem não disponível</div></div>'">
             </div>
           `).join('');
           dots.innerHTML = imgs.map((_, i) => `<span class="dot ${i===0?'active':''}"></span>`).join('');
           startCarousel(imgs.length);
+        } else {
+          carousel.innerHTML = `
+            <div class="placeholder">
+              <div class="ph-text">Nenhuma imagem configurada</div>
+            </div>`;
         }
       }, 1200);
     }
