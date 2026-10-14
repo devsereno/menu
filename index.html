@@ -57,13 +57,11 @@
 
     // Mapeamento de screenshots (você pode adicionar mais depois)
     function getScreenshots(titulo) {
-      // Caminho relativo (funciona em https://devsereno.github.io/menu/)
       const base = 'screenshots/';
-      // Alternativa absoluta: const base = '/menu/screenshots/';
-      const t = titulo.toLowerCase();
+      const t = (titulo || '').toLowerCase();
       if (t.includes('etiqueta')) return [base + 'etiquetas1.jpg', base + 'etiquetas2.jpg'];
       if (t.includes('credencial')) return [base + 'credenciais1.jpg', base + 'credenciais2.jpg'];
-      if (t.includes('apura') || t.includes('eleição') || t.includes('eleicao')) return [base + 'apura1.jpg', base + 'apura2.jpg', base + 'apura3.jpg', base + 'apura4.jpg'];
+      if (t.includes('apura') || t.includes('elei')) return [base + 'apura1.jpg', base + 'apura2.jpg', base + 'apura3.jpg', base + 'apura4.jpg'];
       if (t.includes('canva') || t.includes('editor')) return [base + 'canvaword1.jpg', base + 'canvaword2.jpg'];
       return [];
     }
