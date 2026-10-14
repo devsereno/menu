@@ -204,8 +204,7 @@
       const p = allPages.find(x => x.id === id);
       if (!p) return;
 
-      const key = Object.keys(screenshots).find(k => p.titulo.toLowerCase().includes(k)) || '';
-      const imgs = screenshots[key] || [];
+      const imgs = getScreenshots(p.titulo);
 
       const carousel = document.getElementById('carousel');
       const dots = document.getElementById('dots');
